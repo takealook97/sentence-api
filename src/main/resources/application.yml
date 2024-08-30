@@ -1,0 +1,25 @@
+server:
+  port: 4000
+
+spring:
+  profiles:
+    include: local
+    active: local
+  application:
+    name: udtk-sentence-server
+
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    #open-in-view: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        show-sql: true
+    defer-datasource-initialization: true
