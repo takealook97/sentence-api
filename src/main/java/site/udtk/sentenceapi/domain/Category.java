@@ -31,5 +31,5 @@ public class Category extends BaseEntity {
 
 	@OneToMany(mappedBy = "category", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
 	@Builder.Default
-	private List<SentenceCategory> sentenceCategories = new ArrayList<>();
+	private List<Sentence> sentences = new ArrayList<>();
 }
