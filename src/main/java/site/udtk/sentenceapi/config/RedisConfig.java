@@ -6,8 +6,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericToStringSerializer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import site.udtk.sentenceapi.dto.SentenceDto;
 
@@ -38,7 +38,7 @@ public class RedisConfig {
 	public RedisTemplate<Long, Object> redisTemplate() {
 		RedisTemplate<Long, Object> redisTemplate = new RedisTemplate<>();
 		redisTemplate.setConnectionFactory(createLettuceConnectionFactory());
-		redisTemplate.setKeySerializer(new StringRedisSerializer());
+		redisTemplate.setKeySerializer(new GenericToStringSerializer<>(Long.class));
 		redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(SentenceDto.class));
 		redisTemplate.afterPropertiesSet();
 		return redisTemplate;
