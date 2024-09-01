@@ -10,6 +10,8 @@ pipeline {
         releaseServerUri = 'sentence.udtk.site'
         proxmoxServerAccount = 'deepeet-ubuntu'
         proxmoxServerUri = 'ssh.deepeet.com'
+
+        SSH_PORT  = credentials('deepeet-ssh-port')
     }
 
     parameters {
@@ -56,7 +58,7 @@ pipeline {
             steps {
                 sshagent(credentials: ['deepeet-ubuntu', 'udtk-db-ubuntu']) {
                     sh """
-                        ssh -J ${proxmoxServerAccount}@${proxmoxServerUri} -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} '
+                        ssh -p ${SSH_PORT} -J ${proxmoxServerAccount}@${proxmoxServerUri} -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} '
                         sudo docker stop \$(sudo docker ps -aq --filter "ancestor=${imageName}:latest") || true &&
                         sudo docker rm -f \$(sudo docker ps -aq --filter "ancestor=${imageName}:latest") || true &&
                         sudo docker rmi ${imageName}:latest || true
@@ -68,7 +70,7 @@ pipeline {
         stage('docker-hub pull') {
             steps {
                 sshagent(credentials: ['deepeet-ubuntu', 'udtk-db-ubuntu']) {
-                    sh "ssh -J ${proxmoxServerAccount}@${proxmoxServerUri} -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} 'sudo docker pull $imageName:latest'"
+                    sh "ssh -p ${SSH_PORT} -J ${proxmoxServerAccount}@${proxmoxServerUri} -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} 'sudo docker pull $imageName:latest'"
                 }
             }
         }
@@ -89,7 +91,7 @@ pipeline {
                     sh "scp -o StrictHostKeyChecking=no -J ${proxmoxServerAccount}@${proxmoxServerUri} env.list ${releaseServerAccount}@${releaseServerUri}:~"
 
                     sh """
-                        ssh -J ${proxmoxServerAccount}@${proxmoxServerUri} -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} \
+                        ssh -p ${SSH_PORT} -J ${proxmoxServerAccount}@${proxmoxServerUri} -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} \
                         "sudo docker run -i -e TZ=Asia/Seoul \
                         --env-file ~/env.list \
                         --name ${params.IMAGE_NAME} \
