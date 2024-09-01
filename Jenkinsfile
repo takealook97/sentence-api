@@ -10,8 +10,6 @@ pipeline {
         releaseServerUri = 'sentence.udtk.site'
         proxmoxServerAccount = 'deepeet'
         proxmoxServerUri = 'ssh.deepeet.com'
-
-        SSH_PORT  = credentials('deepeet-ssh-port')
     }
 
     parameters {
@@ -24,9 +22,7 @@ pipeline {
         stage('environment setup') {
             steps {
                 script {
-                    env.BRANCH_NAME = params.ENV_TYPE == 'prod'
-                            ? 'main'
-                            : 'dev'
+                    env.BRANCH_NAME = params.ENV_TYPE == 'prod' ? 'main' : 'dev'
                 }
             }
         }
@@ -56,49 +52,55 @@ pipeline {
         }
         stage('previous docker rm') {
             steps {
-                sshagent(credentials: ['deepeet-ubuntu', 'udtk-db-ubuntu']) {
-                    sh """
-                        ssh -p ${SSH_PORT} -J ${proxmoxServerAccount}@${proxmoxServerUri} -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} '
-                        sudo docker stop \$(sudo docker ps -aq --filter "ancestor=${imageName}:latest") || true &&
-                        sudo docker rm -f \$(sudo docker ps -aq --filter "ancestor=${imageName}:latest") || true &&
-                        sudo docker rmi ${imageName}:latest || true
-                        '
-                    """
+                withCredentials([string(credentialsId: 'deepeet-ssh-port', variable: 'SSH_PORT')]) {
+                    sshagent(credentials: ['deepeet-ubuntu', 'udtk-db-ubuntu']) {
+                        sh """
+                            ssh -p ${SSH_PORT} -J ${proxmoxServerAccount}@${proxmoxServerUri} -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} '
+                            sudo docker stop \$(sudo docker ps -aq --filter "ancestor=${imageName}:latest") || true &&
+                            sudo docker rm -f \$(sudo docker ps -aq --filter "ancestor=${imageName}:latest") || true &&
+                            sudo docker rmi ${imageName}:latest || true
+                            '
+                        """
+                    }
                 }
             }
         }
         stage('docker-hub pull') {
             steps {
-                sshagent(credentials: ['deepeet-ubuntu', 'udtk-db-ubuntu']) {
-                    sh "ssh -p ${SSH_PORT} -J ${proxmoxServerAccount}@${proxmoxServerUri} -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} 'sudo docker pull $imageName:latest'"
+                withCredentials([string(credentialsId: 'deepeet-ssh-port', variable: 'SSH_PORT')]) {
+                    sshagent(credentials: ['deepeet-ubuntu', 'udtk-db-ubuntu']) {
+                        sh "ssh -p ${SSH_PORT} -J ${proxmoxServerAccount}@${proxmoxServerUri} -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} 'sudo docker pull $imageName:latest'"
+                    }
                 }
             }
         }
         stage('service start') {
             steps {
-                sshagent(credentials: ['deepeet-ubuntu', 'udtk-db-ubuntu']) {
-                    sh '''
-                        echo DB_URL=$DB_URL > env.list
-                        echo DB_USERNAME=$DB_USERNAME >> env.list
-                        echo DB_PASSWORD=$DB_PASSWORD >> env.list
-                        echo REDIS_HOST=$REDIS_HOST >> env.list
-                        echo REDIS_PORT=$REDIS_PORT >> env.list
-                        echo REDIS_PASSWORD=$REDIS_PASSWORD >> env.list
-                        echo ALLOWED_IP_1=$ALLOWED_IP_1 >> env.list
-                        echo ALLOWED_IP_2=$ALLOWED_IP_2>> env.list
-                    '''
+                withCredentials([string(credentialsId: 'deepeet-ssh-port', variable: 'SSH_PORT')]) {
+                    sshagent(credentials: ['deepeet-ubuntu', 'udtk-db-ubuntu']) {
+                        sh '''
+                            echo DB_URL=$DB_URL > env.list
+                            echo DB_USERNAME=$DB_USERNAME >> env.list
+                            echo DB_PASSWORD=$DB_PASSWORD >> env.list
+                            echo REDIS_HOST=$REDIS_HOST >> env.list
+                            echo REDIS_PORT=$REDIS_PORT >> env.list
+                            echo REDIS_PASSWORD=$REDIS_PASSWORD >> env.list
+                            echo ALLOWED_IP_1=$ALLOWED_IP_1 >> env.list
+                            echo ALLOWED_IP_2=$ALLOWED_IP_2>> env.list
+                        '''
 
-                    sh "scp -o StrictHostKeyChecking=no -J ${proxmoxServerAccount}@${proxmoxServerUri} env.list ${releaseServerAccount}@${releaseServerUri}:~"
+                        sh "scp -o StrictHostKeyChecking=no -J ${proxmoxServerAccount}@${proxmoxServerUri} env.list ${releaseServerAccount}@${releaseServerUri}:~"
 
-                    sh """
-                        ssh -p ${SSH_PORT} -J ${proxmoxServerAccount}@${proxmoxServerUri} -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} \
-                        "sudo docker run -i -e TZ=Asia/Seoul \
-                        --env-file ~/env.list \
-                        --name ${params.IMAGE_NAME} \
-                        --network ${params.DOCKER_NETWORK} \
-                        -p 4000:4000 \
-                        -d ${env.imageName}:latest"
-                    """
+                        sh """
+                            ssh -p ${SSH_PORT} -J ${proxmoxServerAccount}@${proxmoxServerUri} -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} \
+                            "sudo docker run -i -e TZ=Asia/Seoul \
+                            --env-file ~/env.list \
+                            --name ${params.IMAGE_NAME} \
+                            --network ${params.DOCKER_NETWORK} \
+                            -p 4000:4000 \
+                            -d ${env.imageName}:latest"
+                        """
+                    }
                 }
             }
         }
