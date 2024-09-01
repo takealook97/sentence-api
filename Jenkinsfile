@@ -28,10 +28,8 @@ pipeline {
         }
         stage('jar build') {
             steps {
-                dir('backend') {
-                    sh 'chmod +x ./gradlew'
-                    sh './gradlew clean bootJar'
-                }
+                sh 'chmod +x ./gradlew'
+                sh './gradlew clean bootJar'
             }
         }
         stage('image build & docker-hub push') {
