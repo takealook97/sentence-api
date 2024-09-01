@@ -7,7 +7,7 @@ pipeline {
         dockerImage = ''
 
         releaseServerAccount = 'deepeet'
-        releaseServerUri = '10.10.10.41'
+        releaseServerUri = '10.10.10.40'
         proxmoxServerAccount = 'deepeet'
         proxmoxServerUri = 'ssh.deepeet.com'
         SSH_PORT  = credentials('deepeet-ssh-port')
@@ -54,7 +54,7 @@ pipeline {
         stage('previous docker rm') {
             steps {
                 withCredentials([string(credentialsId: 'deepeet-ssh-port', variable: 'SSH_PORT')]) {
-                    sshagent(credentials: ['deepeet-ubuntu', 'udtk-db-ubuntu']) {
+                    sshagent(credentials: ['deepeet-ubuntu', 'udtk-ubuntu']) {
                         sh """
                             ssh -vvv -o ProxyCommand="ssh -W %h:%p -p ${SSH_PORT} ${proxmoxServerAccount}@${proxmoxServerUri}" -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} '
                             docker stop \$(docker ps -aq --filter "ancestor=${imageName}:latest") || true &&
@@ -69,7 +69,7 @@ pipeline {
         stage('docker-hub pull') {
             steps {
                 withCredentials([string(credentialsId: 'deepeet-ssh-port', variable: 'SSH_PORT')]) {
-                    sshagent(credentials: ['deepeet-ubuntu', 'udtk-db-ubuntu']) {
+                    sshagent(credentials: ['deepeet-ubuntu', 'udtk-ubuntu']) {
                         sh """
                             ssh -o ProxyCommand="ssh -W %h:%p -p ${SSH_PORT} ${proxmoxServerAccount}@${proxmoxServerUri}" -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} 'docker pull $imageName:latest'
                         """
@@ -80,7 +80,7 @@ pipeline {
         stage('service start') {
             steps {
                 withCredentials([string(credentialsId: 'deepeet-ssh-port', variable: 'SSH_PORT')]) {
-                    sshagent(credentials: ['deepeet-ubuntu', 'udtk-db-ubuntu']) {
+                    sshagent(credentials: ['deepeet-ubuntu', 'udtk-ubuntu']) {
                         sh '''
                             echo DB_URL=$DB_URL > env.list
                             echo DB_USERNAME=$DB_USERNAME >> env.list
