@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        imageName = 'sentence-api'
+        imageName = 'underthekey/underthekey'
         registryCredential = 'underthekey-docker-hub'
         dockerImage = ''
 
