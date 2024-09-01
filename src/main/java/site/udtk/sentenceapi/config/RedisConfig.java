@@ -1,5 +1,7 @@
 package site.udtk.sentenceapi.config;
 
+import static site.udtk.sentenceapi.config.constant.RateLimitConstant.*;
+
 import java.time.Duration;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -63,7 +65,8 @@ public class RedisConfig {
 
 		return LettuceBasedProxyManager.builderFor(redisConnection)
 			.withExpirationStrategy(
-				ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(Duration.ofMinutes(1L)))
+				ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(
+					Duration.ofHours(EXPIRATION_OF_HOUR.getValue())))
 			.build();
 	}
 
