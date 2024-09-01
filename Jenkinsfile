@@ -7,9 +7,10 @@ pipeline {
         dockerImage = ''
 
         releaseServerAccount = 'deepeet'
-        releaseServerUri = 'sentence.udtk.site'
+        releaseServerUri = '10.10.10.41'
         proxmoxServerAccount = 'deepeet'
         proxmoxServerUri = 'ssh.deepeet.com'
+        SSH_PORT  = credentials('deepeet-ssh-port')
     }
 
     parameters {
@@ -55,10 +56,10 @@ pipeline {
                 withCredentials([string(credentialsId: 'deepeet-ssh-port', variable: 'SSH_PORT')]) {
                     sshagent(credentials: ['deepeet-ubuntu', 'udtk-db-ubuntu']) {
                         sh """
-                            ssh -p ${SSH_PORT} -J ${proxmoxServerAccount}@${proxmoxServerUri} -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} '
-                            sudo docker stop \$(sudo docker ps -aq --filter "ancestor=${imageName}:latest") || true &&
-                            sudo docker rm -f \$(sudo docker ps -aq --filter "ancestor=${imageName}:latest") || true &&
-                            sudo docker rmi ${imageName}:latest || true
+                            ssh -vvv -o ProxyCommand="ssh -W %h:%p -p ${SSH_PORT} ${proxmoxServerAccount}@${proxmoxServerUri}" -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} '
+                            docker stop \$(docker ps -aq --filter "ancestor=${imageName}:latest") || true &&
+                            docker rm -f \$(docker ps -aq --filter "ancestor=${imageName}:latest") || true &&
+                            docker rmi ${imageName}:latest || true
                             '
                         """
                     }
@@ -69,7 +70,9 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'deepeet-ssh-port', variable: 'SSH_PORT')]) {
                     sshagent(credentials: ['deepeet-ubuntu', 'udtk-db-ubuntu']) {
-                        sh "ssh -p ${SSH_PORT} -J ${proxmoxServerAccount}@${proxmoxServerUri} -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} 'sudo docker pull $imageName:latest'"
+                        sh """
+                            ssh -o ProxyCommand="ssh -W %h:%p -p ${SSH_PORT} ${proxmoxServerAccount}@${proxmoxServerUri}" -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} 'docker pull $imageName:latest'
+                        """
                     }
                 }
             }
@@ -89,16 +92,11 @@ pipeline {
                             echo ALLOWED_IP_2=$ALLOWED_IP_2>> env.list
                         '''
 
-                        sh "scp -o StrictHostKeyChecking=no -J ${proxmoxServerAccount}@${proxmoxServerUri} env.list ${releaseServerAccount}@${releaseServerUri}:~"
+                        sh "scp -o ProxyCommand=\"ssh -W %h:%p -p ${SSH_PORT} ${proxmoxServerAccount}@${proxmoxServerUri}\" -o StrictHostKeyChecking=no env.list ${releaseServerAccount}@${releaseServerUri}:~"
 
                         sh """
-                            ssh -p ${SSH_PORT} -J ${proxmoxServerAccount}@${proxmoxServerUri} -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} \
-                            "sudo docker run -i -e TZ=Asia/Seoul \
-                            --env-file ~/env.list \
-                            --name ${params.IMAGE_NAME} \
-                            --network ${params.DOCKER_NETWORK} \
-                            -p 4000:4000 \
-                            -d ${env.imageName}:latest"
+                            ssh -o ProxyCommand="ssh -W %h:%p -p ${SSH_PORT} ${proxmoxServerAccount}@${proxmoxServerUri}" -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} \
+                            "docker run -i -e TZ=Asia/Seoul --env-file ~/env.list --name ${params.IMAGE_NAME} --network ${params.DOCKER_NETWORK} -p 4000:4000 -d ${env.imageName}:latest"
                         """
                     }
                 }
