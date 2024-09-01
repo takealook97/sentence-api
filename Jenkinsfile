@@ -6,9 +6,9 @@ pipeline {
         registryCredential = 'underthekey-docker-hub'
         dockerImage = ''
 
-        releaseServerAccount = 'udtk-db-ubuntu'
+        releaseServerAccount = 'deepeet'
         releaseServerUri = 'sentence.udtk.site'
-        proxmoxServerAccount = 'deepeet-ubuntu'
+        proxmoxServerAccount = 'deepeet'
         proxmoxServerUri = 'ssh.deepeet.com'
 
         SSH_PORT  = credentials('deepeet-ssh-port')
