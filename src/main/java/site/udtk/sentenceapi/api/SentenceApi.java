@@ -18,11 +18,11 @@ import site.udtk.sentenceapi.service.SentenceService;
 public class SentenceApi {
 	private final SentenceService sentenceService;
 
-	@GetMapping("/{sentenceId}")
-	public ResponseEntity<SentenceDto> getSentenceById(@PathVariable Long sentenceId) {
-		SentenceDto sentenceDto = sentenceService.getSentenceById(sentenceId);
-		return ResponseEntity.ok(sentenceDto);
-	}
+	// @GetMapping("/{sentenceId}")
+	// public ResponseEntity<SentenceDto> getSentenceById(@PathVariable Long sentenceId) {
+	// 	SentenceDto sentenceDto = sentenceService.getSentenceById(sentenceId);
+	// 	return ResponseEntity.ok(sentenceDto);
+	// }
 
 	@GetMapping("/random/{count}")
 	public ResponseEntity<List<SentenceDto>> getRandomSentences(@PathVariable Long count) {
