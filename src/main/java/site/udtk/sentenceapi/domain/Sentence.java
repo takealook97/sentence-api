@@ -1,13 +1,10 @@
 package site.udtk.sentenceapi.domain;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import jakarta.annotation.Nullable;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,7 +24,7 @@ public class Sentence extends BaseEntity {
 	@NonNull
 	private String content;
 
-	@OneToMany(mappedBy = "sentence", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-	@Builder.Default
-	private List<SentenceCategory> sentenceCategories = new ArrayList<>();
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "category_id", nullable = false)
+	private Category category;
 }
