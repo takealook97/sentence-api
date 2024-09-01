@@ -19,6 +19,15 @@ pipeline {
     }
 
     stages {
+        stage('environment setup') {
+            steps {
+                script {
+                    env.BRANCH_NAME = params.ENV_TYPE == 'prod'
+                            ? 'main'
+                            : 'dev'
+                }
+            }
+        }
         stage('git clone') {
             steps {
                 git branch: "${env.BRANCH_NAME}",
