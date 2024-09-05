@@ -96,7 +96,13 @@ pipeline {
 
                         sh """
                             ssh -o ProxyCommand="ssh -W %h:%p -p ${SSH_PORT} ${proxmoxServerAccount}@${proxmoxServerUri}" -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} \
-                            "docker run -i -e TZ=Asia/Seoul --env-file ~/env.list --name ${params.IMAGE_NAME} --network ${params.DOCKER_NETWORK} -p 4000:4000 -d ${env.imageName}:latest"
+                            "docker run -i -e TZ=Asia/Seoul \
+                            --env-file ~/env.list \
+                            --name ${params.IMAGE_NAME} \
+                            --restart unless-stopped \
+                            --network ${params.DOCKER_NETWORK} \
+                            -p 4000:4000 \
+                            -d ${env.imageName}:latest"
                         """
                     }
                 }
