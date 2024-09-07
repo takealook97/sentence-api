@@ -2,15 +2,10 @@ pipeline {
     agent any
 
     environment {
-        imageName = 'underthekey/underthekey'
-        registryCredential = 'underthekey-docker-hub'
+        DOCKER_REPOSITORY = 'underthekey/underthekey'
+        REGISTRY_CREDENTIAL = 'underthekey-docker-hub'
         dockerImage = ''
-
-        releaseServerAccount = 'deepeet'
-        releaseServerUri = '10.10.10.40'
-        proxmoxServerAccount = 'deepeet'
-        proxmoxServerUri = 'ssh.deepeet.com'
-        SSH_PORT  = credentials('deepeet-ssh-port')
+        DEPLOY_URL = 'https://sentence.udtk.site'
     }
 
     parameters {
@@ -27,6 +22,7 @@ pipeline {
                 }
             }
         }
+
         stage('git clone') {
             steps {
                 git branch: "${env.BRANCH_NAME}",
@@ -34,72 +30,106 @@ pipeline {
                     url: 'https://github.com/underthekey/sentence-api'
             }
         }
+
         stage('jar build') {
             steps {
                 sh 'chmod +x ./gradlew'
                 sh './gradlew clean bootJar'
             }
         }
+
         stage('image build & docker-hub push') {
             steps {
                 script {
-                    docker.withRegistry('', registryCredential) {
+                    docker.withRegistry('', REGISTRY_CREDENTIAL) {
                         sh 'docker buildx create --use --name mybuilder'
-                        sh "docker buildx build --platform linux/amd64 -t $imageName:$BUILD_NUMBER --push ."
-                        sh "docker buildx build --platform linux/amd64 -t $imageName:latest --push ."
+                        sh "docker buildx build --platform linux/amd64 -t $DOCKER_REPOSITORY:$BUILD_NUMBER --push ."
+                        sh "docker buildx build --platform linux/amd64 -t $DOCKER_REPOSITORY:latest --push ."
                     }
                 }
             }
         }
+
         stage('previous docker rm') {
             steps {
-                withCredentials([string(credentialsId: 'deepeet-ssh-port', variable: 'SSH_PORT')]) {
+                sshagent(credentials: ['deepeet-ubuntu', 'udtk-ubuntu']) {
+                    sh """
+                        ssh -o ProxyCommand="ssh -W %h:%p -p ${PROXMOX_SSH_PORT} ${PROXMOX_SERVER_ACCOUNT}@${PROXMOX_SERVER_URI}" \
+                        -o StrictHostKeyChecking=no ${UDTK_SERVER_ACCOUNT}@${UDTK_SERVER_IP} \
+                        '
+                        docker stop \$(docker ps -aq --filter "ancestor=${DOCKER_REPOSITORY}:latest") || true &&
+                        docker rm -f \$(docker ps -aq --filter "ancestor=${DOCKER_REPOSITORY}:latest") || true &&
+                        docker rmi ${DOCKER_REPOSITORY}:latest || true
+                        '
+                    """
+                }
+            }
+        }
+
+        stage('docker-hub pull') {
+            steps {
+                sshagent(credentials: ['deepeet-ubuntu', 'udtk-ubuntu']) {
+                    sh """
+                        ssh -o ProxyCommand="ssh -W %h:%p -p ${PROXMOX_SSH_PORT} ${PROXMOX_SERVER_ACCOUNT}@${PROXMOX_SERVER_URI}" \
+                        -o StrictHostKeyChecking=no ${UDTK_SERVER_ACCOUNT}@${UDTK_SERVER_IP} 'docker pull ${DOCKER_REPOSITORY}:latest'
+                    """
+                }
+            }
+        }
+
+        stage('service start') {
+            steps {
+                withCredentials([file(credentialsId: 'udtk-credentials', variable: 'ENV_CREDENTIALS')]) {
                     sshagent(credentials: ['deepeet-ubuntu', 'udtk-ubuntu']) {
                         sh """
-                            ssh -vvv -o ProxyCommand="ssh -W %h:%p -p ${SSH_PORT} ${proxmoxServerAccount}@${proxmoxServerUri}" -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} '
-                            docker stop \$(docker ps -aq --filter "ancestor=${imageName}:latest") || true &&
-                            docker rm -f \$(docker ps -aq --filter "ancestor=${imageName}:latest") || true &&
-                            docker rmi ${imageName}:latest || true
+                            scp -o ProxyCommand="ssh -W %h:%p -p ${PROXMOX_SSH_PORT} \
+                            ${PROXMOX_SERVER_ACCOUNT}@${PROXMOX_SERVER_URI}" \
+                            -o StrictHostKeyChecking=no $ENV_CREDENTIALS ${UDTK_SERVER_ACCOUNT}@${UDTK_SERVER_IP}:~/udtk-credentials
+                        """
+
+                        sh """
+                            ssh -o ProxyCommand="ssh -W %h:%p -p ${PROXMOX_SSH_PORT} \
+                            ${PROXMOX_SERVER_ACCOUNT}@${PROXMOX_SERVER_URI}" \
+                            -o StrictHostKeyChecking=no ${UDTK_SERVER_ACCOUNT}@${UDTK_SERVER_IP} \
+                            '
+                            SERVER_PORT=\$(grep SERVER_PORT ~/udtk-credentials | cut -d "=" -f2)
+
+                            docker run -i -e TZ=Asia/Seoul --env-file ~/udtk-credentials \\
+                            --name ${params.IMAGE_NAME} --network ${params.DOCKER_NETWORK} \\
+                            -p \${SERVER_PORT}:\${SERVER_PORT} \\
+                            --restart unless-stopped \\
+                            -d ${DOCKER_REPOSITORY}:latest
+
+                            rm -f ~/udtk-credentials
                             '
                         """
                     }
                 }
             }
         }
-        stage('docker-hub pull') {
-            steps {
-                withCredentials([string(credentialsId: 'deepeet-ssh-port', variable: 'SSH_PORT')]) {
-                    sshagent(credentials: ['deepeet-ubuntu', 'udtk-ubuntu']) {
-                        sh """
-                            ssh -o ProxyCommand="ssh -W %h:%p -p ${SSH_PORT} ${proxmoxServerAccount}@${proxmoxServerUri}" -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} 'docker pull $imageName:latest'
-                        """
-                    }
-                }
-            }
-        }
-        stage('service start') {
-            steps {
-                withCredentials([string(credentialsId: 'deepeet-ssh-port', variable: 'SSH_PORT')]) {
-                    sshagent(credentials: ['deepeet-ubuntu', 'udtk-ubuntu']) {
-                        sh '''
-                            echo DB_URL=$DB_URL > env.list
-                            echo DB_USERNAME=$DB_USERNAME >> env.list
-                            echo DB_PASSWORD=$DB_PASSWORD >> env.list
-                            echo REDIS_HOST=$REDIS_HOST >> env.list
-                            echo REDIS_PORT=$REDIS_PORT >> env.list
-                            echo REDIS_PASSWORD=$REDIS_PASSWORD >> env.list
-                            echo ALLOWED_IP_1=$ALLOWED_IP_1 >> env.list
-                            echo ALLOWED_IP_2=$ALLOWED_IP_2>> env.list
-                        '''
 
-                        sh "scp -o ProxyCommand=\"ssh -W %h:%p -p ${SSH_PORT} ${proxmoxServerAccount}@${proxmoxServerUri}\" -o StrictHostKeyChecking=no env.list ${releaseServerAccount}@${releaseServerUri}:~"
+        stage('service test & alert send') {
+            steps {
+                sh """
+                    #!/bin/bash
 
-                        sh """
-                            ssh -o ProxyCommand="ssh -W %h:%p -p ${SSH_PORT} ${proxmoxServerAccount}@${proxmoxServerUri}" -o StrictHostKeyChecking=no ${releaseServerAccount}@${releaseServerUri} \
-                            "docker run -i -e TZ=Asia/Seoul --env-file ~/env.list --name ${params.IMAGE_NAME} --network ${params.DOCKER_NETWORK} -p 4000:4000 -d ${env.imageName}:latest"
-                        """
-                    }
-                }
+                    for retry_count in \$(seq 20)
+                    do
+                        if curl -s "${DEPLOY_URL}/ping" > /dev/null
+                        then
+                            echo "Build Success!"
+                            exit 0
+                        fi
+
+                        if [ \$retry_count -eq 20 ]
+                        then
+                            exit 1
+                        fi
+
+                        echo "The server is not alive yet. Retry health check in 5 seconds..."
+                        sleep 5
+                    done
+                """
             }
         }
     }

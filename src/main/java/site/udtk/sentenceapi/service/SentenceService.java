@@ -114,6 +114,6 @@ public class SentenceService {
 	}
 
 	private SentenceDto getCachedSentence(Long id) {
-		return (SentenceDto)redisTemplate.opsForValue().get(id);
+		return redisTemplate.opsForValue().get(id);
 	}
 }
