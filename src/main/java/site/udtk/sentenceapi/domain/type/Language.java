@@ -1,5 +1,7 @@
 package site.udtk.sentenceapi.domain.type;
 
+import java.util.Arrays;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -12,4 +14,8 @@ public enum Language {
 	ENGLISH("eng");
 
 	private final String name;
+
+	public static boolean isSupported(String language) {
+		return Arrays.stream(Language.values()).anyMatch(l -> l.getName().equals(language));
+	}
 }

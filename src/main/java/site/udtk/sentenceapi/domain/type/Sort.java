@@ -1,5 +1,7 @@
 package site.udtk.sentenceapi.domain.type;
 
+import java.util.Arrays;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -29,4 +31,8 @@ public enum Sort {
 	QUOTE("quote");
 
 	private final String name;
+
+	public static boolean isSupported(String sort) {
+		return Arrays.stream(Sort.values()).anyMatch(s -> s.getName().equals(sort));
+	}
 }
