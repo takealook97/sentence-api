@@ -3,6 +3,7 @@ package site.udtk.sentenceapi.service;
 import static site.udtk.sentenceapi.domain.type.Threshold.*;
 import static site.udtk.sentenceapi.exception.ErrorCode.*;
 import static site.udtk.sentenceapi.util.RandomIdsGenerator.*;
+import static site.udtk.sentenceapi.util.ValidationUtil.*;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -28,7 +29,7 @@ import site.udtk.sentenceapi.repository.SentenceRepository;
 public class SentenceService {
 	private final CategoryRepository categoryRepository;
 	private final SentenceRepository sentenceRepository;
-	private final RedisTemplate<Long, Object> redisTemplate;
+	private final RedisTemplate<Long, SentenceDto> redisTemplate;
 
 	public SentenceDto getSentenceById(Long id) {
 		SentenceDto cachedSentence = getCachedSentence(id);
@@ -44,19 +45,22 @@ public class SentenceService {
 
 	public List<SentenceDto> getRandomSentences(Long count) {
 		validateCount(count);
+
 		List<Long> randomIds = generateRandomIds(count.intValue());
 		return getRandomSentencesByIds(randomIds);
 	}
 
-	public List<SentenceDto> getRandomSentencesByLanguage(int count, String language) {
-		validateCount((long)count);
+	public List<SentenceDto> getRandomSentencesByLanguage(String language, Long count) {
+		validateLanguage(language);
+		validateCount(count);
 
 		List<Long> randomIds = categoryRepository.findRandomSentenceIdsByLanguage(language, count);
 		return getRandomSentencesByIds(randomIds);
 	}
 
-	public List<SentenceDto> getRandomSentencesByCategorySort(int count, String sort) {
-		validateCount((long)count);
+	public List<SentenceDto> getRandomSentencesByCategorySort(String sort, Long count) {
+		validateSort(sort);
+		validateCount(count);
 
 		List<Long> randomIds = categoryRepository.findRandomSentenceIdsBySort(sort, count);
 		return getRandomSentencesByIds(randomIds);
@@ -67,10 +71,7 @@ public class SentenceService {
 			return new ArrayList<>();
 		}
 
-		List<Object> cachedObjects = redisTemplate.opsForValue().multiGet(randomIds);
-		if (cachedObjects == null) {
-			cachedObjects = new ArrayList<>();
-		}
+		List<SentenceDto> cachedObjects = getCachedObjects(randomIds);
 
 		List<SentenceDto> result = processCachedSentences(cachedObjects);
 		List<Long> missingIds = getMissingIds(randomIds, cachedObjects);
@@ -82,14 +83,16 @@ public class SentenceService {
 		return result;
 	}
 
-	private List<SentenceDto> processCachedSentences(List<Object> cachedObjects) {
-		return cachedObjects.stream()
-			.filter(Objects::nonNull)
-			.map(cached -> (SentenceDto)cached)
-			.collect(Collectors.toList());
+	private List<SentenceDto> getCachedObjects(List<Long> randomIds) {
+		List<SentenceDto> cachedObjects = redisTemplate.opsForValue().multiGet(randomIds);
+		return cachedObjects == null ? new ArrayList<>() : cachedObjects;
 	}
 
-	private List<Long> getMissingIds(List<Long> randomIds, List<Object> cachedObjects) {
+	private List<SentenceDto> processCachedSentences(List<SentenceDto> cachedObjects) {
+		return cachedObjects.stream().filter(Objects::nonNull).collect(Collectors.toList());
+	}
+
+	private List<Long> getMissingIds(List<Long> randomIds, List<SentenceDto> cachedObjects) {
 		return IntStream.range(0, cachedObjects.size())
 			.filter(i -> cachedObjects.get(i) == null)
 			.mapToObj(randomIds::get)
@@ -111,12 +114,6 @@ public class SentenceService {
 	}
 
 	private SentenceDto getCachedSentence(Long id) {
-		return (SentenceDto)redisTemplate.opsForValue().get(id);
-	}
-
-	private void validateCount(Long count) {
-		if (count <= 0 || count > REQUEST_LIMIT.getNum()) {
-			throw new BaseException(RANGE_OUT_OF_BOUND);
-		}
+		return redisTemplate.opsForValue().get(id);
 	}
 }
