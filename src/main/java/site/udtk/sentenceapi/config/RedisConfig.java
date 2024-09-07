@@ -48,8 +48,8 @@ public class RedisConfig {
 	}
 
 	@Bean
-	public RedisTemplate<Long, Object> redisTemplate() {
-		RedisTemplate<Long, Object> redisTemplate = new RedisTemplate<>();
+	public RedisTemplate<Long, SentenceDto> redisTemplate() {
+		RedisTemplate<Long, SentenceDto> redisTemplate = new RedisTemplate<>();
 		redisTemplate.setConnectionFactory(createLettuceConnectionFactory());
 		redisTemplate.setKeySerializer(new GenericToStringSerializer<>(Long.class));
 		redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(SentenceDto.class));
@@ -60,8 +60,8 @@ public class RedisConfig {
 	@Bean
 	public ProxyManager<String> lettuceBasedProxyManager() {
 		RedisClient redisClient = redisClient();
-		StatefulRedisConnection<String, byte[]> redisConnection = redisClient
-			.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE));
+		StatefulRedisConnection<String, byte[]> redisConnection =
+			redisClient.connect(RedisCodec.of(StringCodec.UTF8, ByteArrayCodec.INSTANCE));
 
 		return LettuceBasedProxyManager.builderFor(redisConnection)
 			.withExpirationStrategy(
