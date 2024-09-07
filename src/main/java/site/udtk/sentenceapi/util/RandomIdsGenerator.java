@@ -6,9 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.springframework.stereotype.Component;
-
-@Component
 public class RandomIdsGenerator {
 	public static List<Long> generateRandomIds(int count) {
 		Set<Long> randomIds = new HashSet<>();
