@@ -4,7 +4,8 @@
 
 - traditional korean proverbs, more than 4,000
     - from https://www.krpia.co.kr/product/main?plctId=PLCT00004626#none
-- famous saying (soon)
+- quotes, more than 200 (more to be added)
+    - from https://www.goodreads.com/quotes (soon)
 - maxim (soon)
 
 ---
