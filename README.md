@@ -10,7 +10,7 @@
 
 ---
 
-## 📚 Instruction
+## 📚 Specification
 
 (No author information is provided for traditional Korean proverbs.)
 
@@ -48,7 +48,7 @@
 
 ### response example
 
-ex) `https://sentence.udtk.site/random?count=2`
+ex) https://sentence.udtk.site/random?count=2
 
 ```json
 [
@@ -65,7 +65,7 @@ ex) `https://sentence.udtk.site/random?count=2`
 
 ### ❗️request limit
 
-- ***20 requests per 5 minutes***
+- **<U>20 requests per 5 minutes</U>**
 - when the limit is exceeded, the response will be `429 Too Many Requests`
 - time left to reset the limit will be included in the response header `X-Rate-Limit-Retry-After-Seconds`
 
@@ -88,4 +88,4 @@ ex) `https://sentence.udtk.site/random?count=2`
 
 ## 🏗️ Architecture
 
-<img src="./assets/sentence-architecture.jpg" alt="architecture">
+<img src="./assets/sentence-architecture.jpg" alt="architecture" width=600>
