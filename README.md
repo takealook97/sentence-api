@@ -4,7 +4,8 @@
 
 - traditional korean proverbs, more than 4,000
     - from https://www.krpia.co.kr/product/main?plctId=PLCT00004626#none
-- famous saying (soon)
+- quotes, more than 200 (more to be added)
+    - from https://www.goodreads.com/quotes (soon)
 - maxim (soon)
 
 ---
@@ -28,7 +29,7 @@
 ### 3. `https://sentence.udtk.site/language?language=&count=`
 
 - **description** : return random sentences in chosen language
-- request parameter : language, count
+- request parameter : `language`, `count`
     - language : `kor`, `eng`
         - default : `kor`
     - count : number of sentences to get
@@ -44,8 +45,6 @@
     - count : number of sentences to get
         - range : 1 ~ 20
         - default : 1
-
----
 
 ### response example
 
@@ -67,8 +66,8 @@ ex) https://sentence.udtk.site/random?count=2
 ### ❗️request limit
 
 - **<U>20 requests per 5 minutes</U>**
-- when the limit is exceeded, the response will be 429 Too Many Requests
-- time left to reset the limit will be included in the response header X-Rate-Limit-Retry-After-Seconds
+- when the limit is exceeded, the response will be `429 Too Many Requests`
+- time left to reset the limit will be included in the response header `X-Rate-Limit-Retry-After-Seconds`
 
 ---
 
