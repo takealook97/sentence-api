@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_REPOSITORY = 'underthekey/underthekey'
+        DOCKER_REPOSITORY = 'underthekey/sentence-api'
         REGISTRY_CREDENTIAL = 'underthekey-docker-hub'
         dockerImage = ''
         DEPLOY_URL = 'https://sentence.udtk.site'
@@ -79,12 +79,12 @@ pipeline {
 
         stage('service start') {
             steps {
-                withCredentials([file(credentialsId: 'udtk-credentials', variable: 'ENV_CREDENTIALS')]) {
+                withCredentials([file(credentialsId: 'udtk-sentence-api-credentials', variable: 'ENV_CREDENTIALS')]) {
                     sshagent(credentials: ['deepeet-ubuntu', 'udtk-ubuntu']) {
                         sh """
                             scp -o ProxyCommand="ssh -W %h:%p -p ${PROXMOX_SSH_PORT} \
                             ${PROXMOX_SERVER_ACCOUNT}@${PROXMOX_SERVER_URI}" \
-                            -o StrictHostKeyChecking=no $ENV_CREDENTIALS ${UDTK_SERVER_ACCOUNT}@${UDTK_SERVER_IP}:~/udtk-credentials
+                            -o StrictHostKeyChecking=no $ENV_CREDENTIALS ${UDTK_SERVER_ACCOUNT}@${UDTK_SERVER_IP}:~/udtk-sentence-api-credentials
                         """
 
                         sh """
@@ -92,15 +92,15 @@ pipeline {
                             ${PROXMOX_SERVER_ACCOUNT}@${PROXMOX_SERVER_URI}" \
                             -o StrictHostKeyChecking=no ${UDTK_SERVER_ACCOUNT}@${UDTK_SERVER_IP} \
                             '
-                            SERVER_PORT=\$(grep SERVER_PORT ~/udtk-credentials | cut -d "=" -f2)
+                            SERVER_PORT=\$(grep SERVER_PORT ~/udtk-sentence-api-credentials | cut -d "=" -f2)
 
-                            docker run -i -e TZ=Asia/Seoul --env-file ~/udtk-credentials \\
+                            docker run -i -e TZ=Asia/Seoul --env-file ~/udtk-sentence-api-credentials \\
                             --name ${params.IMAGE_NAME} --network ${params.DOCKER_NETWORK} \\
                             -p \${SERVER_PORT}:\${SERVER_PORT} \\
                             --restart unless-stopped \\
                             -d ${DOCKER_REPOSITORY}:latest
 
-                            rm -f ~/udtk-credentials
+                            rm -f ~/udtk-sentence-api-credentials
                             '
                         """
                     }
