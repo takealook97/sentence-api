@@ -2,53 +2,28 @@
 
 ## 🗂️ Data Source
 
-- traditional korean proverbs, more than 4,000
-    - from https://www.krpia.co.kr/product/main?plctId=PLCT00004626#none
-- quotes, more than 200 (more to be added)
-    - from https://www.goodreads.com/quotes (soon)
-- maxim (soon)
+- Traditional Korean proverbs, more than 4,000
+    - from [KRPia](https://www.krpia.co.kr/product/main?plctId=PLCT00004626#none)
+- Quotes, more than 200 (more to be added)
+    - from [Goodreads](https://www.goodreads.com/quotes) (soon)
+- Maxim (soon)
 
 ---
 
 ## 📚 Specification
 
-(No author information is provided for traditional Korean proverbs.)
+(Author information is not provided for proverbs and common sentences.)
 
-### 1. `https://sentence.udtk.site/{id}`
+| Endpoint                                               | Description                                      | Request Parameters                                                                                                                                   | Default Values                  | Range           |
+|--------------------------------------------------------|--------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------|-----------------|
+| `https://sentence.udtk.site/{id}`                      | Returns a sentence by ID.                        | None                                                                                                                                                 | None                            | None            |
+| `https://sentence.udtk.site/random?count=`             | Returns several random sentences.                | `count`: Number of sentences to get.                                                                                                                 | `count`: 1                      | `count`: 1 ~ 20 |
+| `https://sentence.udtk.site/language?language=&count=` | Returns random sentences in the chosen language. | `language`: `kor`, `eng`<br>`count`: Number of sentences to get.                                                                                     | `language`: `kor`<br>`count`: 1 | `count`: 1 ~ 20 |
+| `https://sentence.udtk.site/sort?sort=&count=`         | Returns random sentences in the chosen sort.     | `sort`: `가1`, `가2`, `나`, `다`, `마`, `바`, `사1`, `사2`, `아1`, `아2`, `자1`, `자2`, `차`, `카`, `타`, `파`, `하`, `quote`<br>`count`: Number of sentences to get. | `sort`: `가1`<br>`count`: 1      | `count`: 1 ~ 20 |
 
-- **description** : return a sentence by id
+### Response Example
 
-### 2. `https://sentence.udtk.site/random?count=`
-
-- **description** : return several random sentences
-- request parameter : `count`
-    - count : number of sentences to get
-        - range : 1 ~ 20
-        - default : 1
-
-### 3. `https://sentence.udtk.site/language?language=&count=`
-
-- **description** : return random sentences in chosen language
-- request parameter : `language`, `count`
-    - language : `kor`, `eng`
-        - default : `kor`
-    - count : number of sentences to get
-        - range : 1 ~ 20
-        - default : 1
-
-### 4. `https://sentence.udtk.site/sort?sort=&count=`
-
-- **description** : return random sentences in chosen sort
-- request parameter : `sort`, `count`
-    - sort : `가1`, `가2`, `나`, `다`, `마`, `바`, `사1`, `사2`, `아1`, `아2`, `자1`, `자2`, `차`, `카`, `타`, `파`, `하`, `quote`
-        - default : `가1`
-    - count : number of sentences to get
-        - range : 1 ~ 20
-        - default : 1
-
-### response example
-
-ex) https://sentence.udtk.site/random?count=2
+ex) `https://sentence.udtk.site/random?count=2`
 
 ```json
 [
@@ -63,11 +38,11 @@ ex) https://sentence.udtk.site/random?count=2
 ]
 ```
 
-### ❗️request limit
+### ❗️Request Limit
 
 - **<U>20 requests per 5 minutes</U>**
-- when the limit is exceeded, the response will be `429 Too Many Requests`
-- time left to reset the limit will be included in the response header `X-Rate-Limit-Retry-After-Seconds`
+- When the limit is exceeded, the response will be `429 Too Many Requests`
+- Time left to reset the limit will be included in the response header `X-Rate-Limit-Retry-After-Seconds`
 
 ---
 
@@ -78,14 +53,16 @@ ex) https://sentence.udtk.site/random?count=2
 - Spring Data JPA
 - bucket4j
 - MariaDB
-- Redis
-- Docker
-- Nginx
-- Jenkins
+- Redis 7.2
 - Proxmox
+- Nginx
+- Docker
+- Jenkins
 
 ---
 
 ## 🏗️ Architecture
 
-<img src="./assets/sentence-architecture.jpg" alt="architecture" width=600>
+<img src="./assets/sentence-architecture.jpg" alt="architecture">
+
+---
