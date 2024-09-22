@@ -7,6 +7,7 @@ import static site.udtk.sentenceapi.util.ValidationUtil.*;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -79,7 +80,7 @@ public class SentenceService {
 		if (!missingIds.isEmpty()) {
 			result.addAll(getSentencesFromDbAndCache(missingIds));
 		}
-
+		Collections.shuffle(result); // randomize order
 		return result;
 	}
 
