@@ -14,16 +14,16 @@
 
 (Author information is not provided for proverbs and common sentences.)
 
-| Endpoint                                               | Description                                      | Request Parameters                                                                                                                                   | Default Values                  | Range           |
-|--------------------------------------------------------|--------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------|-----------------|
-| `https://sentence.udtk.site/{id}`                      | Returns a sentence by ID.                        | None                                                                                                                                                 | None                            | None            |
-| `https://sentence.udtk.site/random?count=`             | Returns several random sentences.                | `count`: Number of sentences to get.                                                                                                                 | `count`: 1                      | `count`: 1 ~ 20 |
-| `https://sentence.udtk.site/language?language=&count=` | Returns random sentences in the chosen language. | `language`: `kor`, `eng`<br>`count`: Number of sentences to get.                                                                                     | `language`: `kor`<br>`count`: 1 | `count`: 1 ~ 20 |
-| `https://sentence.udtk.site/sort?sort=&count=`         | Returns random sentences in the chosen sort.     | `sort`: `가1`, `가2`, `나`, `다`, `마`, `바`, `사1`, `사2`, `아1`, `아2`, `자1`, `자2`, `차`, `카`, `타`, `파`, `하`, `quote`<br>`count`: Number of sentences to get. | `sort`: `가1`<br>`count`: 1      | `count`: 1 ~ 20 |
+| Endpoint                                                     | Description                                      | Request Parameters                                                                                                                                   | Default Values                  | Range           |
+|--------------------------------------------------------------|--------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------|-----------------|
+| `https://sentence.underthekey.com/{id}`                      | Returns a sentence by ID.                        | None                                                                                                                                                 | None                            | None            |
+| `https://sentence.underthekey.com/random?count=`             | Returns several random sentences.                | `count`: Number of sentences to get.                                                                                                                 | `count`: 1                      | `count`: 1 ~ 20 |
+| `https://sentence.underthekey.com/language?language=&count=` | Returns random sentences in the chosen language. | `language`: `kor`, `eng`<br>`count`: Number of sentences to get.                                                                                     | `language`: `kor`<br>`count`: 1 | `count`: 1 ~ 20 |
+| `https://sentence.underthekey.com/sort?sort=&count=`         | Returns random sentences in the chosen sort.     | `sort`: `가1`, `가2`, `나`, `다`, `마`, `바`, `사1`, `사2`, `아1`, `아2`, `자1`, `자2`, `차`, `카`, `타`, `파`, `하`, `quote`<br>`count`: Number of sentences to get. | `sort`: `가1`<br>`count`: 1      | `count`: 1 ~ 20 |
 
 ### Response Example
 
-ex) `https://sentence.udtk.site/random?count=2`
+ex) `https://sentence.underthekey.com/random?count=2`
 
 ```json
 [
