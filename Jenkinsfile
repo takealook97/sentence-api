@@ -5,7 +5,7 @@ pipeline {
         DOCKER_REPOSITORY = 'underthekey/sentence-api'
         REGISTRY_CREDENTIAL = 'underthekey-docker-hub'
         dockerImage = ''
-        DEPLOY_URL = 'https://sentence.udtk.site'
+        DEPLOY_URL = 'https://sentence.underthekey.com'
     }
 
     parameters {
