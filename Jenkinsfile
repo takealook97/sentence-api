@@ -49,7 +49,7 @@ pipeline {
                 }
             }
         }
-
+        
         stage('previous docker rm') {
             steps {
                 sshagent(credentials: ['deepeet-ubuntu', 'udtk-ubuntu']) {
@@ -57,9 +57,9 @@ pipeline {
                         ssh -o ProxyCommand="ssh -W %h:%p -p ${PROXMOX_SSH_PORT} ${PROXMOX_SERVER_ACCOUNT}@${PROXMOX_SERVER_URI}" \
                         -o StrictHostKeyChecking=no ${UDTK_SERVER_ACCOUNT}@${UDTK_SERVER_IP} \
                         '
-                        docker stop \$(docker ps -aq --filter "ancestor=${DOCKER_REPOSITORY}:latest") || true &&
-                        docker rm -f \$(docker ps -aq --filter "ancestor=${DOCKER_REPOSITORY}:latest") || true &&
-                        docker rmi ${DOCKER_REPOSITORY}:latest || true
+                        docker ps -q --filter "ancestor=${DOCKER_REPOSITORY}:${env.IMAGE_NAME}-latest" | xargs -r docker stop
+                        docker ps -aq --filter "ancestor=${DOCKER_REPOSITORY}:${env.IMAGE_NAME}-latest" | xargs -r docker rm -f
+                        docker images ${DOCKER_REPOSITORY}:${env.IMAGE_NAME}-latest -q | xargs -r docker rmi
                         '
                     """
                 }
