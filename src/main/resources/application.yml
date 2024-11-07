@@ -35,6 +35,12 @@ spring:
       port: ${REDIS_PORT}
       password: ${REDIS_PASSWORD}
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus, health, info
+
 rate-limiting:
   allowed-ips:
     - ${ALLOWED_IP_1}
