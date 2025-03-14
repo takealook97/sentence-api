@@ -45,3 +45,4 @@ rate-limiting:
   allowed-ips:
     - ${ALLOWED_IP_1}
     - ${ALLOWED_IP_2}
+    - ${ALLOWED_IP_3}
