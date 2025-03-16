@@ -52,11 +52,9 @@ pipeline {
         
         stage('previous docker rm') {
             steps {
-                sshagent(credentials: ['deepeet-ubuntu', 'udtk-ubuntu']) {
+                sshagent(credentials: ['udtk-ubuntu']) {
                     sh """
-                        ssh -o ProxyCommand="ssh -W %h:%p -p ${PROXMOX_SSH_PORT} ${PROXMOX_SERVER_ACCOUNT}@${PROXMOX_SERVER_URI}" \
-                        -o StrictHostKeyChecking=no ${UDTK_SERVER_ACCOUNT}@${UDTK_SERVER_IP} \
-                        '
+                        ssh -o StrictHostKeyChecking=no ${UDTK_SERVER_ACCOUNT}@${UDTK_SERVER_IP} '
                         docker ps -q --filter "name=sentence-api" | xargs -r docker stop
                         docker ps -aq --filter "name=sentence-api" | xargs -r docker rm -f
                         docker images ${DOCKER_REPOSITORY}:${env.IMAGE_NAME}-latest -q | xargs -r docker rmi
@@ -68,10 +66,9 @@ pipeline {
 
         stage('docker-hub pull') {
             steps {
-                sshagent(credentials: ['deepeet-ubuntu', 'udtk-ubuntu']) {
+                sshagent(credentials: ['udtk-ubuntu']) {
                     sh """
-                        ssh -o ProxyCommand="ssh -W %h:%p -p ${PROXMOX_SSH_PORT} ${PROXMOX_SERVER_ACCOUNT}@${PROXMOX_SERVER_URI}" \
-                        -o StrictHostKeyChecking=no ${UDTK_SERVER_ACCOUNT}@${UDTK_SERVER_IP} 'docker pull ${DOCKER_REPOSITORY}:latest'
+                        ssh -o StrictHostKeyChecking=no ${UDTK_SERVER_ACCOUNT}@${UDTK_SERVER_IP} 'docker pull ${DOCKER_REPOSITORY}:latest'
                     """
                 }
             }
@@ -80,18 +77,13 @@ pipeline {
         stage('service start') {
             steps {
                 withCredentials([file(credentialsId: 'udtk-sentence-api-credentials', variable: 'ENV_CREDENTIALS')]) {
-                    sshagent(credentials: ['deepeet-ubuntu', 'udtk-ubuntu']) {
+                    sshagent(credentials: ['udtk-ubuntu']) {
                         sh """
-                            scp -o ProxyCommand="ssh -W %h:%p -p ${PROXMOX_SSH_PORT} \
-                            ${PROXMOX_SERVER_ACCOUNT}@${PROXMOX_SERVER_URI}" \
-                            -o StrictHostKeyChecking=no $ENV_CREDENTIALS ${UDTK_SERVER_ACCOUNT}@${UDTK_SERVER_IP}:~/udtk-sentence-api-credentials
+                            scp -o StrictHostKeyChecking=no $ENV_CREDENTIALS ${UDTK_SERVER_ACCOUNT}@${UDTK_SERVER_IP}:~/udtk-sentence-api-credentials
                         """
 
                         sh """
-                            ssh -o ProxyCommand="ssh -W %h:%p -p ${PROXMOX_SSH_PORT} \
-                            ${PROXMOX_SERVER_ACCOUNT}@${PROXMOX_SERVER_URI}" \
-                            -o StrictHostKeyChecking=no ${UDTK_SERVER_ACCOUNT}@${UDTK_SERVER_IP} \
-                            '
+                            ssh -o StrictHostKeyChecking=no ${UDTK_SERVER_ACCOUNT}@${UDTK_SERVER_IP} '
                             SERVER_PORT=\$(grep SERVER_PORT ~/udtk-sentence-api-credentials | cut -d "=" -f2)
 
                             docker run -i -e TZ=Asia/Seoul --env-file ~/udtk-sentence-api-credentials \\
