@@ -6,6 +6,8 @@ import jakarta.servlet.http.HttpServletRequest;
 
 public class ClientIpUtil {
 	private static final String[] IP_HEADER_CANDIDATES = {
+		"CF-Connecting-IP",
+		"True-Client-IP",
 		"X-Forwarded-For",
 		"Proxy-Client-IP",
 		"WL-Proxy-Client-IP",
@@ -21,11 +23,9 @@ public class ClientIpUtil {
 	public static String getClientIp(HttpServletRequest request) {
 		return Arrays.stream(IP_HEADER_CANDIDATES)
 			.map(request::getHeader)
-
 			.filter(ipAddress -> ipAddress != null && !ipAddress.isEmpty() && !"unknown".equalsIgnoreCase(ipAddress))
-			.map(ipAddress -> ipAddress.split(",")[0])
+			.map(ipAddress -> ipAddress.split(",")[0].trim())
 			.findFirst()
-
-			.orElseGet(request::getRemoteAddr);
+			.orElseGet(request::getRemoteAddr); // 마지막 대안
 	}
 }
